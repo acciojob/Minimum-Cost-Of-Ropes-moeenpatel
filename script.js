@@ -1,93 +1,62 @@
-function calculateMinCost() {
-    const ropeLengthsInput = document.getElementById('rope-lengths').value;
-  const ropeLengths = ropeLengthsInput.split(',').map(Number);
+function minHeapify(arr, i, heapSize) {
+    const left = 2 * i + 1;
+    const right = 2 * i + 2;
+    let smallest = i;
 
-  function findMinimumCost(ropeLengths) {
-    
-    let totalCost = 0;
-    const minHeap = new MinHeap();
-
-    ropeLengths.forEach(length => minHeap.insert(length));
-
-    while (minHeap.size() > 1) {
-    
-      const rope1 = minHeap.extractMin();
-      const rope2 = minHeap.extractMin();
-
-      const cost = rope1 + rope2;
-
-      totalCost += cost;
-
-      minHeap.insert(cost);
+    if (left < heapSize && arr[left] < arr[i]) {
+        smallest = left;
     }
 
-    return totalCost;
-  }
+    if (right < heapSize && arr[right] < arr[smallest]) {
+        smallest = right;
+    }
 
-  function displayResult(minCost) {
-    const resultElement = document.getElementById('result');
-    resultElement.textContent = `Minimum Cost: ${minCost}`;
-  }
-
-  const minCost = findMinimumCost(ropeLengths);
-  displayResult(minCost);
+    if (smallest !== i) {
+        [arr[i], arr[smallest]] = [arr[smallest], arr[i]];
+        minHeapify(arr, smallest, heapSize);
+    }
 }
 
-class MinHeap {
-  constructor() {
-    this.heap = [];
-  }
-
-  insert(value) {
-    this.heap.push(value);
-    this.bubbleUp(this.heap.length - 1);
-  }
-
-  bubbleUp(index) {
-    while (index > 0) {
-      const parentIndex = Math.floor((index - 1) / 2);
-      if (this.heap[index] < this.heap[parentIndex]) {
-        [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
-        index = parentIndex;
-      } else {
-        break;
-      }
+function buildMinHeap(arr) {
+    const n = arr.length;
+    for (let i = Math.floor(n / 2); i >= 0; i--) {
+        minHeapify(arr, i, n);
     }
-  }
+}
 
-  extractMin() {
-    if (this.heap.length === 0) {
-      return null;
-    }
-    if (this.heap.length === 1) {
-      return this.heap.pop();
+function extractMin(arr, heapSize) {
+    if (heapSize <= 0) return -1;
+    if (heapSize === 1) {
+        heapSize--;
+        return arr.pop();
     }
 
-    const minValue = this.heap[0];
-    this.heap[0] = this.heap.pop();
-    this.sinkDown(0);
-    return minValue;
-  }
+    const root = arr[0];
+    arr[0] = arr[heapSize - 1];
+    heapSize--;
+    minHeapify(arr, 0, heapSize);
 
-  sinkDown(index) {
-    const leftChildIndex = 2 * index + 1;
-    const rightChildIndex = 2 * index + 2;
-    let smallest = index;
+    return root;
+}
 
-    if (leftChildIndex < this.heap.length && this.heap[leftChildIndex] < this.heap[smallest]) {
-      smallest = leftChildIndex;
+function calculateMinimumCost() {
+    const inputElement = document.getElementById("inputRopes");
+    const resultElement = document.getElementById("result");
+    const ropeLengths = inputElement.value.split(",").map(Number);
+
+    const heapSize = ropeLengths.length;
+    buildMinHeap(ropeLengths);
+
+    let totalCost = 0;
+
+    while (heapSize > 1) {
+        const min1 = extractMin(ropeLengths, heapSize);
+        const min2 = extractMin(ropeLengths, heapSize);
+        const newRope = min1 + min2;
+        totalCost += newRope;
+        ropeLengths.push(newRope);
+        heapSize++;
     }
-    if (rightChildIndex < this.heap.length && this.heap[rightChildIndex] < this.heap[smallest]) {
-      smallest = rightChildIndex;
-    }
 
-    if (smallest !== index) {
-      [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
-      this.sinkDown(smallest);
-    }
-  }
-
-  size() {
-    return this.heap.length;
-  }
-}  
+    resultElement.textContent = `Minimum Cost: ${totalCost}`;
+}
